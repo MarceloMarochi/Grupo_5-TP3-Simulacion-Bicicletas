@@ -32,15 +32,14 @@ ANCHOS = {
     "Semana": 70,
     "RND_Dem": 75, "Demanda": 70,
     "Inv_Ini": 70, "Llega_Ped": 75,
-    "RND_Dano": 75, "Danadas": 70,
+    "RND_Danadas": 90, "Danadas": 70,
     "Inv_PostArr": 85,
     "Vendido": 70, "Faltante": 70,
-    "Inv_Fin": 70, "Reordenar": 75,
-    "RND_Lead": 75, "Lead_T": 70, "Sem_Arribo": 85,
+    "Inv_Final": 75, "Ordenar_Ped": 85,
+    "RND_Demora": 85, "Demora": 65, "Sem_Arribo": 85,
     "Ped_Pend": 75,
-    "C_Tenencia": 90, "C_Pedido": 80, "C_Faltante": 90, "C_Total_Sem": 95,
-    "Ac_Tenencia": 100, "Ac_Pedido": 100, "Ac_Faltante": 100, "Ac_Costo_Tot": 110,
-    "Ac_Demanda": 95, "Ac_Faltante_U": 105, "Ac_Danadas": 95,
+    "C_Mantenimiento": 110, "C_Pedido": 80, "C_Faltante": 90, "C_Total_Sem": 95,
+    "Ac_Costo_Tot": 110, "Ac_Danadas": 95,
 }
 
 
@@ -87,14 +86,14 @@ class App(tk.Tk):
         # --- Política ---
         f = add_grupo("Política de inventario")
         self._add_entry(f, "Cantidad a pedir (Q)", "cantidad_pedido", "5")
-        self._add_entry(f, "Punto de reorden (R)", "punto_reorden", "2")
+        self._add_entry(f, "Punto de Reposición (R)", "punto_reorden", "2")
         self._add_entry(f, "Inventario inicial",   "inventario_inicial", "7")
 
         # --- Costos ---
         f = add_grupo("Costos")
-        self._add_entry(f, "Tenencia ($/u/sem)",   "costo_tenencia", "30")
+        self._add_entry(f, "Mantenimiento ($/u/sem)", "costo_tenencia", "30")
         self._add_entry(f, "Pedido ($/orden)",     "costo_pedido", "200")
-        self._add_entry(f, "Agotamiento ($/u)",    "costo_agotamiento", "50")
+        self._add_entry(f, "Faltante ($/u)",        "costo_agotamiento", "50")
 
         # --- Distribuciones ---
         f = add_grupo("Demanda semanal — P(D=v)")
@@ -103,10 +102,10 @@ class App(tk.Tk):
         self._add_entry(f, "P(D=2)", "p_dem_2", "0.25")
         self._add_entry(f, "P(D=3)", "p_dem_3", "0.10")
 
-        f = add_grupo("Lead time (semanas)")
-        self._add_entry(f, "P(L=1)", "p_lead_1", "0.30")
-        self._add_entry(f, "P(L=2)", "p_lead_2", "0.40")
-        self._add_entry(f, "P(L=3)", "p_lead_3", "0.30")
+        f = add_grupo("Demora (semanas)")
+        self._add_entry(f, "P(S=1)", "p_lead_1", "0.30")
+        self._add_entry(f, "P(S=2)", "p_lead_2", "0.40")
+        self._add_entry(f, "P(S=3)", "p_lead_3", "0.30")
 
         f = add_grupo("Daños al recibir pedido")
         self._add_entry(f, "P(0 dañadas)", "p_dano_0", "0.60")
@@ -286,13 +285,7 @@ class App(tk.Tk):
             f"|  Semilla: {sem_str}\n"
             f"RESULTADOS:  Costo total = ${r.costo_total:,.2f}   "
             f"Promedio/sem = ${r.costo_promedio_por_semana:,.2f}   "
-            f"Nivel servicio = {r.nivel_servicio:.2%}   "
-            f"Demanda total = {r.demanda_total:,}   "
-            f"Faltante = {r.faltante_unidades_total:,} u   "
-            f"Bicis dañadas = {r.danadas_total:,}\n"
-            f"DESGLOSE:    Tenencia = ${r.costo_tenencia_total:,.2f}   "
-            f"Pedido = ${r.costo_pedido_total:,.2f}   "
-            f"Faltante = ${r.costo_faltante_total:,.2f}"
+            f"Bicis dañadas = {r.danadas_total:,}"
         )
         self.lbl_resumen.config(text=txt)
 

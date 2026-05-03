@@ -40,16 +40,15 @@ COLUMNAS = [
     "Semana",
     "RND_Dem",       "Demanda",
     "Inv_Ini",       "Llega_Ped",
-    "RND_Dano",      "Danadas",
+    "RND_Danadas",   "Danadas",
     "Inv_PostArr",
     "Vendido",       "Faltante",
-    "Inv_Fin",
-    "Reordenar",
-    "RND_Lead",      "Lead_T",   "Sem_Arribo",
+    "Inv_Final",
+    "Ordenar_Ped",
+    "RND_Demora",    "Demora",   "Sem_Arribo",
     "Ped_Pend",
-    "C_Tenencia",    "C_Pedido", "C_Faltante", "C_Total_Sem",
-    "Ac_Tenencia",   "Ac_Pedido","Ac_Faltante","Ac_Costo_Tot",
-    "Ac_Demanda",    "Ac_Faltante_U", "Ac_Danadas",
+    "C_Mantenimiento", "C_Pedido", "C_Faltante", "C_Total_Sem",
+    "Ac_Costo_Tot",  "Ac_Danadas",
 ]
 
 
@@ -135,17 +134,9 @@ class Resultado:
     filas_visibles: list           # lista de tuplas (1 por semana en rango)
     fila_final: tuple              # la última fila (N)
     parametros: Parametros
-    # Acumuladores finales
-    costo_tenencia_total: float = 0.0
-    costo_pedido_total: float = 0.0
-    costo_faltante_total: float = 0.0
     costo_total: float = 0.0
-    demanda_total: int = 0
-    faltante_unidades_total: int = 0
     danadas_total: int = 0
-    # Métricas derivadas
     costo_promedio_por_semana: float = 0.0
-    nivel_servicio: float = 0.0    # vendido / demanda
 
 
 # ---------------------------------------------------------------------------
@@ -161,19 +152,14 @@ def simular(p: Parametros) -> Resultado:
     dist_dano    = DistribucionDiscreta(p.dano_valores,    p.dano_probs)
 
     # ---- Estado: trabajamos con 2 filas en memoria (previa y actual) ----
-    # La "fila previa" se condensa al estado mínimo necesario:
+    # Guardamos los datos necesarios de la "fila previa" :
     inv_fin_prev: int = p.inventario_inicial  # arrastra al inicio de la próxima semana
     pedido_pendiente_prev: bool = False
     semana_arribo_prev: Optional[int] = None
     cantidad_pedida_pendiente: int = 0
 
     # Acumuladores
-    ac_ten = 0.0
-    ac_ped = 0.0
-    ac_fal = 0.0
     ac_total = 0.0
-    ac_demanda = 0
-    ac_falta_u = 0
     ac_danadas = 0
 
     # Rango de filas a guardar
@@ -184,6 +170,9 @@ def simular(p: Parametros) -> Resultado:
     fila_final = None
 
     N = p.n_filas
+
+    """ Acá dentro del for comenzamos a guardar en variables locales la información de la fila
+     actual """
     for semana in range(1, N + 1):
         # ---- 1) Arribo del pedido (si corresponde) ----
         llega_pedido = False
@@ -233,12 +222,7 @@ def simular(p: Parametros) -> Resultado:
         c_fal = faltante * p.costo_agotamiento
         c_total_sem = c_ten + c_ped + c_fal
 
-        ac_ten += c_ten
-        ac_ped += c_ped
-        ac_fal += c_fal
         ac_total += c_total_sem
-        ac_demanda += demanda
-        ac_falta_u += faltante
         ac_danadas += cant_danadas
 
         # ---- 6) Construcción de fila (solo si está en rango o es la última) ----
@@ -259,9 +243,7 @@ def simular(p: Parametros) -> Resultado:
                 "Sí" if pedido_pendiente_prev else "No",
                 round(c_ten, 2), round(c_ped, 2),
                 round(c_fal, 2), round(c_total_sem, 2),
-                round(ac_ten, 2), round(ac_ped, 2),
-                round(ac_fal, 2), round(ac_total, 2),
-                ac_demanda, ac_falta_u, ac_danadas,
+                round(ac_total, 2), ac_danadas,
             )
             if en_rango:
                 visibles.append(fila)
@@ -277,18 +259,10 @@ def simular(p: Parametros) -> Resultado:
         filas_visibles=visibles,
         fila_final=fila_final,
         parametros=p,
-        costo_tenencia_total=ac_ten,
-        costo_pedido_total=ac_ped,
-        costo_faltante_total=ac_fal,
         costo_total=ac_total,
-        demanda_total=ac_demanda,
-        faltante_unidades_total=ac_falta_u,
         danadas_total=ac_danadas,
     )
     res.costo_promedio_por_semana = ac_total / N if N else 0.0
-    res.nivel_servicio = (
-        (ac_demanda - ac_falta_u) / ac_demanda if ac_demanda else 1.0
-    )
     return res
 
 
@@ -306,7 +280,4 @@ if __name__ == "__main__":
     print("\nFila N (última):", r.fila_final)
     print(f"\nCosto total acumulado:        ${r.costo_total:,.2f}")
     print(f"Costo promedio por semana:    ${r.costo_promedio_por_semana:,.2f}")
-    print(f"Demanda total:                {r.demanda_total}")
-    print(f"Faltante (u):                 {r.faltante_unidades_total}")
     print(f"Bicicletas dañadas:           {r.danadas_total}")
-    print(f"Nivel de servicio:            {r.nivel_servicio:.4%}")
