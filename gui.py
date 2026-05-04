@@ -69,9 +69,36 @@ class App(tk.Tk):
     # LAYOUT
     # ------------------------------------------------------------------
     def _construir_layout(self):
-        # Frame de parámetros (izquierda)
-        izq = ttk.Frame(self, padding=10)
-        izq.pack(side="left", fill="y")
+        # Contenedor izquierdo con scroll vertical
+        sidebar_outer = ttk.Frame(self)
+        sidebar_outer.pack(side="left", fill="y")
+
+        _vsb_sidebar = ttk.Scrollbar(sidebar_outer, orient="vertical")
+        _vsb_sidebar.pack(side="right", fill="y")
+
+        _canvas_sidebar = tk.Canvas(
+            sidebar_outer, highlightthickness=0, yscrollcommand=_vsb_sidebar.set
+        )
+        _canvas_sidebar.pack(side="left", fill="both", expand=True)
+        _vsb_sidebar.config(command=_canvas_sidebar.yview)
+
+        izq = ttk.Frame(_canvas_sidebar, padding=10)
+        _cw = _canvas_sidebar.create_window((0, 0), window=izq, anchor="nw")
+
+        def _sync_scroll(event=None):
+            _canvas_sidebar.configure(scrollregion=_canvas_sidebar.bbox("all"))
+
+        def _sync_width(event):
+            _canvas_sidebar.itemconfig(_cw, width=event.width)
+
+        izq.bind("<Configure>", _sync_scroll)
+        _canvas_sidebar.bind("<Configure>", _sync_width)
+
+        def _on_mousewheel(event):
+            _canvas_sidebar.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        _canvas_sidebar.bind("<Enter>", lambda e: _canvas_sidebar.bind_all("<MouseWheel>", _on_mousewheel))
+        _canvas_sidebar.bind("<Leave>", lambda e: _canvas_sidebar.unbind_all("<MouseWheel>"))
 
         ttk.Label(izq, text="PARÁMETROS", font=("Segoe UI", 11, "bold")).pack(anchor="w")
         ttk.Separator(izq, orient="horizontal").pack(fill="x", pady=(2, 8))
@@ -284,8 +311,8 @@ class App(tk.Tk):
             f"N={p.n_filas:,}  mostrar i={p.mostrar_cantidad_i} desde j={p.mostrar_desde_j}  "
             f"|  Semilla: {sem_str}\n"
             f"RESULTADOS:  Costo total = ${r.costo_total:,.2f}   "
-            f"Promedio/sem = ${r.costo_promedio_por_semana:,.2f}   "
-            f"Bicis dañadas = {r.danadas_total:,}"
+            f"Promedio costo/sem = ${r.costo_promedio_por_semana:,.2f}   "
+            f"Total bicis dañadas = {r.danadas_total:,}"
         )
         self.lbl_resumen.config(text=txt)
 
