@@ -239,7 +239,7 @@ def simular(p: Parametros) -> Resultado:
                 vendido, faltante,
                 inv_fin,
                 "Sí" if reordenar else "No",
-                rnd_lead, lead_t, sem_arribo,
+                rnd_lead, lead_t, semana_arribo_prev if pedido_pendiente_prev else "",
                 "Sí" if pedido_pendiente_prev else "No",
                 round(c_ten, 2), round(c_ped, 2),
                 round(c_fal, 2), round(c_total_sem, 2),
