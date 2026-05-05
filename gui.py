@@ -72,6 +72,8 @@ class App(tk.Tk):
         # Contenedor izquierdo con scroll vertical
         sidebar_outer = ttk.Frame(self)
         sidebar_outer.pack(side="left", fill="y")
+        self._sidebar_outer = sidebar_outer
+        self._sidebar_visible = True
 
         _vsb_sidebar = ttk.Scrollbar(sidebar_outer, orient="vertical")
         _vsb_sidebar.pack(side="right", fill="y")
@@ -118,9 +120,9 @@ class App(tk.Tk):
 
         # --- Costos ---
         f = add_grupo("Costos")
-        self._add_entry(f, "Mantenimiento ($/u/sem)", "costo_tenencia", "30")
-        self._add_entry(f, "Pedido ($/orden)",     "costo_pedido", "200")
-        self._add_entry(f, "Faltante ($/u)",        "costo_agotamiento", "50")
+        self._add_entry(f, "Mantenimiento (Km)", "costo_tenencia", "30")
+        self._add_entry(f, "Pedido (Ko)",     "costo_pedido", "200")
+        self._add_entry(f, "Faltante (Ks)",        "costo_agotamiento", "50")
 
         # --- Distribuciones ---
         f = add_grupo("Demanda semanal — P(D=v)")
@@ -153,13 +155,22 @@ class App(tk.Tk):
         # ----- Frame derecha: tabla + resumen -----
         der = ttk.Frame(self, padding=(0, 10, 10, 10))
         der.pack(side="right", fill="both", expand=True)
+        self._der = der
 
-        # Resumen arriba
+        # Barra superior: botón toggle sidebar + resumen
+        top_bar = ttk.Frame(der)
+        top_bar.pack(fill="x", pady=(0, 6))
+
+        self._btn_toggle = ttk.Button(
+            top_bar, text="◀", width=3, command=self._toggle_sidebar
+        )
+        self._btn_toggle.pack(side="left", padx=(0, 8))
+
         self.lbl_resumen = ttk.Label(
-            der, text="Esperando simulación…",
+            top_bar, text="Esperando simulación…",
             font=("Consolas", 10), justify="left", anchor="w"
         )
-        self.lbl_resumen.pack(fill="x", pady=(0, 6))
+        self.lbl_resumen.pack(side="left", fill="x", expand=True)
 
         # Frame de tabla con scrollbars
         tabla_frame = ttk.Frame(der)
@@ -194,6 +205,26 @@ class App(tk.Tk):
         # Ctrl+C → copiar al portapapeles en formato tabular (se pega en Excel)
         self.tree.bind("<Control-c>", self._copiar_seleccion)
         self.tree.bind("<Control-C>", self._copiar_seleccion)
+
+        # Rueda del mouse: vertical normal / Shift+rueda → scroll horizontal fluido
+        def _on_tree_wheel(event):
+            if event.state & 0x1:  # Shift presionado
+                left, _ = self.tree.xview()
+                step = 0.05 * (-event.delta / 120)   # 5 % del ancho total por tick
+                self.tree.xview_moveto(max(0.0, min(1.0, left + step)))
+            else:
+                self.tree.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        self.tree.bind("<MouseWheel>", _on_tree_wheel)
+
+    def _toggle_sidebar(self):
+        if self._sidebar_visible:
+            self._sidebar_outer.pack_forget()
+            self._btn_toggle.config(text="▶")
+        else:
+            self._sidebar_outer.pack(side="left", fill="y", before=self._der)
+            self._btn_toggle.config(text="◀")
+        self._sidebar_visible = not self._sidebar_visible
 
     def _add_entry(self, parent, label, key, default):
         row = ttk.Frame(parent)
