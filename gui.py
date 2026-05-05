@@ -288,6 +288,24 @@ class App(tk.Tk):
         if p.n_filas <= 0:
             messagebox.showerror("Parámetro inválido", "N debe ser > 0")
             return
+        if p.mostrar_desde_j < 1:
+            messagebox.showerror("Parámetro inválido", "j debe ser >= 1")
+            return
+        if p.mostrar_cantidad_i < 0:
+            messagebox.showerror("Parámetro inválido", "i debe ser >= 0")
+            return
+        if p.mostrar_desde_j > p.n_filas:
+            messagebox.showerror(
+                "Parámetro inválido",
+                f"j ({p.mostrar_desde_j}) no puede ser mayor que N ({p.n_filas}).\n"
+                "No habría filas para mostrar en ese rango.")
+            return
+        if p.mostrar_cantidad_i > p.n_filas:
+            messagebox.showerror(
+                "Parámetro inválido",
+                f"i ({p.mostrar_cantidad_i}) no puede ser mayor que N ({p.n_filas}).\n"
+                "No se pueden mostrar más filas de las que se simulan.")
+            return
 
         # Cursor reloj durante la simulación
         self.config(cursor="watch")
