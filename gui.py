@@ -279,12 +279,26 @@ class App(tk.Tk):
         for nombre, vec in (("Demanda", p.demanda_probs),
                             ("Lead time", p.lead_probs),
                             ("Daños", p.dano_probs)):
+            if any(v < 0 for v in vec):
+                messagebox.showerror(
+                    "Distribución inválida",
+                    f"Las probabilidades de {nombre} no pueden ser negativas.")
+                return
             s = sum(vec)
             if abs(s - 1.0) > 1e-6:
                 messagebox.showerror(
                     "Distribución inválida",
                     f"Las probabilidades de {nombre} suman {s:.4f}, deben sumar 1.")
                 return
+        if p.inventario_inicial < 0:
+            messagebox.showerror("Parámetro inválido", "El stock inicial debe ser >= 0")
+            return
+        if p.cantidad_pedido <= 0:
+            messagebox.showerror("Parámetro inválido", "La cantidad a pedir (Q) debe ser > 0")
+            return
+        if p.punto_reorden < 0:
+            messagebox.showerror("Parámetro inválido", "El punto de reposición (R) debe ser >= 0")
+            return
         if p.n_filas <= 0:
             messagebox.showerror("Parámetro inválido", "N debe ser > 0")
             return
